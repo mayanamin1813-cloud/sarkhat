@@ -33,6 +33,7 @@ class MainActivity : Activity() {
 
     private lateinit var web: WebView
     private lateinit var prefs: SharedPreferences
+    private var hadError = false          // آیا آخرین بار بارگذاری صفحه خطا داشت؟
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
