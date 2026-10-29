@@ -50,16 +50,20 @@ jobs:
             echo "شاخه gh-pages هنوز نیست — بدون دیتا منتشر می‌شود (مغز ابری پرش می‌کند)"
           fi
 
-      - name: آماده‌سازی و فعال‌سازی خودکار Pages
+      - name: آماده‌سازی Pages (اگر هنوز فعال نیست، بی‌خطا رد می‌شود)
+        id: pages
+        continue-on-error: true
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: آپلود فایل‌های سایت
+        if: steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: webapp
 
       - name: انتشار
+        if: steps.pages.outcome == 'success'
         id: deployment
         uses: actions/deploy-pages@v4
