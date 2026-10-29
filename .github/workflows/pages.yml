@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  administration: write    # فقط برای فعال‌سازی خودکار Pages بار اول
 
 concurrency:
   group: gh-pages-data
@@ -31,6 +32,25 @@ jobs:
     steps:
       - name: دریافت کد
         uses: actions/checkout@v4
+
+      - name: فعال‌سازی Pages (فقط بار اول — خودکار)
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            https://api.github.com/repos/${{ github.repository }}/pages)
+          echo "وضعیت فعلی Pages: http=$code"
+          if [ "$code" = "200" ]; then
+            echo "Pages قبلاً فعال است ✓"
+          else
+            http=$(curl -s -o /tmp/pages-resp.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/pages" \
+              -d '{"source":{"branch":"gh-pages","path":"/"}}')
+            echo "فعال‌سازی Pages: http=$http"
+            cat /tmp/pages-resp.json | head -3 || true
+            [ "$http" = "201" ] || [ "$http" = "200" ] || [ "$http" = "409" ] && echo "Pages فعال شد ✓" || echo "⚠️ فعال‌سازی خودکار نشد — Settings → Pages → Branch: gh-pages"
+          fi
 
       - name: انتشار webapp در شاخه gh-pages
         uses: peaceiris/actions-gh-pages@v4
