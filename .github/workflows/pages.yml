@@ -4,7 +4,7 @@ name: انتشار وب‌اپ روی GitHub Pages
 #   https://mayanamin1813-cloud.github.io/sarkhat/
 #
 # نکته‌ها:
-#  • Pages بار اول به‌صورت خودکار فعال می‌شود (enablement: true)
+#  • Pages از قبل فعال شده است؛ بدون configure-pages مستقیم منتشر می‌کنیم
 #  • دیتای زنده (data/live.json) و APK از شاخه ذخیره‌سازی gh-pages برمی‌داریم
 #    تا بین انتشارها گم نشوند
 #  • مغز ابری (brain.yml) هم همین خروجی را منتشر می‌کند — با گروه همزمانی
@@ -50,20 +50,11 @@ jobs:
             echo "شاخه gh-pages هنوز نیست — بدون دیتا منتشر می‌شود (مغز ابری پرش می‌کند)"
           fi
 
-      - name: آماده‌سازی Pages (اگر هنوز فعال نیست، بی‌خطا رد می‌شود)
-        id: pages
-        continue-on-error: true
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
       - name: آپلود فایل‌های سایت
-        if: steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: webapp
 
       - name: انتشار
-        if: steps.pages.outcome == 'success'
         id: deployment
         uses: actions/deploy-pages@v4

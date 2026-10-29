@@ -75,21 +75,13 @@ jobs:
           git commit --amend -m "دیتای زنده — $(TZ=Asia/Tehran date '+%Y-%m-%d %H:%M')" >/dev/null
           git push --force origin gh-pages
 
-      - name: آماده‌سازی Pages (اگر هنوز فعال نیست، بی‌خطا رد می‌شود)
-        id: pages
-        continue-on-error: true
-        if: env.changed == '1'
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
       - name: آپلود فایل‌های سایت (شامل دیتای زنده)
-        if: env.changed == '1' && steps.pages.outcome == 'success'
+        if: env.changed == '1'
         uses: actions/upload-pages-artifact@v3
         with:
           path: webapp
 
       - name: انتشار
-        if: env.changed == '1' && steps.pages.outcome == 'success'
+        if: env.changed == '1'
         id: deployment
         uses: actions/deploy-pages@v4
