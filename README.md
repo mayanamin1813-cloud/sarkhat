@@ -141,7 +141,8 @@ sarkhat-bot/
 **معامله واقعی؟** قفل است. `config.py` را ببین (`ENABLE_LIVE`). اول حداقل یک ماه
 `backtest` و `paper` را اجرا کن.
 
-راهنماهای کامل: [نصب روی Termux](docs/TERMUX-SETUP.md) •
+راهنماهای کامل: [ربات ابری بدون کامپیوتر ☁️](docs/CLOUD-BOT.md) •
+[نصب روی Termux](docs/TERMUX-SETUP.md) •
 [نصب APK اندروید](docs/ANDROID-INSTALL.md) •
 [ساخت مخزن GitHub](docs/GITHUB-SETUP.md) •
 [دادن دسترسی به دستیار با موبایل](docs/TOKEN-ACCESS.md)

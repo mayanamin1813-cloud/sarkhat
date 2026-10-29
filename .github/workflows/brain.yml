@@ -1,0 +1,73 @@
+name: مغز ابری — هر ۵ دقیقه
+
+# این ورک‌فلو «ربات ابری» است — بدون کامپیوتر، سرور رایگان گیت‌هاب:
+#   ۱) هر ۵ دقیقه دیتای واقعی بیت‌کوین (۵ دقیقه‌ای) و بورس تهران را می‌گیرد
+#   ۲) سیگنال می‌سازد (Watcher → Brain → Executor → Guard)
+#   ۳) نتیجه را در data/live.json روی سایت می‌گذارد تا اپ گوشی بخواند
+#   ۴) اگر تلگرام تنظیم شده باشد (Secrets: TG_BOT_TOKEN و TG_CHAT_ID)
+#      روی سیگنال‌های معتبر پیام می‌دهد
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"     # هر ۵ دقیقه — ۲۴ ساعته
+  workflow_dispatch:            # اجرای دستی برای تست
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-data
+  cancel-in-progress: false
+
+jobs:
+  brain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: نصب پایتون
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: دریافت دیتای فعلی از gh-pages
+        run: |
+          mkdir -p webapp/data
+          if git clone --depth 1 --branch gh-pages \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ghp 2>/dev/null; then
+            cp ghp/data/live.json webapp/data/ 2>/dev/null || true
+            cp ghp/data/brain_state.json webapp/data/ 2>/dev/null || true
+            echo "دیتای قبلی: $(ls webapp/data)"
+          else
+            echo "gh-pages هنوز ساخته نشده — از صفر شروع می‌شود"
+          fi
+
+      - name: اجرای مغز ابری
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python cloud/brain.py --data-dir webapp/data
+
+      - name: انتشار دیتای زنده در gh-pages
+        run: |
+          CHANGED=$(cat webapp/data/.changed 2>/dev/null || echo 0)
+          if [ "$CHANGED" != "1" ]; then
+            echo "چیزی عوض نشده — نیاز به انتشار نیست"
+            exit 0
+          fi
+          if [ ! -d ghp ]; then
+            echo "gh-pages هنوز وجود ندارد — بعد از اولین انتشار Pages درست می‌شود"
+            exit 0
+          fi
+          mkdir -p ghp/data
+          cp webapp/data/live.json ghp/data/live.json
+          cp webapp/data/brain_state.json ghp/data/brain_state.json
+          cd ghp
+          git config user.name "sarkhat-brain"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          # amend + force push تا تاریخچه شاخه داده‌ها همیشه سبک بماند
+          git commit --amend -m "دیتای زنده — $(TZ=Asia/Tehran date '+%Y-%m-%d %H:%M')" >/dev/null
+          git push --force origin gh-pages
+          echo "انتشار شد: data/live.json به‌روز شد"

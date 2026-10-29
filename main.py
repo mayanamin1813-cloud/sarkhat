@@ -238,7 +238,7 @@ def run_serve_mode(port=8000):
 # ==============================================================
 def main():
     parser = argparse.ArgumentParser(description="ربات سرخط‌زن — معاملات الگوریتمی چند نوبتی")
-    parser.add_argument("mode", choices=["backtest", "paper", "serve", "live"],
+    parser.add_argument("mode", choices=["backtest", "paper", "serve", "live", "brain"],
                         help="backtest = تست تاریخی | paper = شبیه‌سازی | serve = اپ موبایل + سیگنال | live = معامله واقعی")
     parser.add_argument("--market", choices=["tse", "crypto", "both"], default="tse",
                         help="(فقط برای backtest) کدام بازار تست شود")
@@ -255,6 +255,9 @@ def main():
         run_serve_mode(port=args.port)
     elif args.mode == "live":
         run_live_mode()
+    elif args.mode == "brain":
+        from cloud.brain import main as brain_main
+        sys.exit(brain_main([]))   # خروجی در webapp/data نوشته می‌شود
 
 
 if __name__ == "__main__":

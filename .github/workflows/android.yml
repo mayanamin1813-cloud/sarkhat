@@ -1,11 +1,23 @@
 name: ساخت APK اندروید
 
-# با هر push (یا اجرای دستی) نسخه APK به‌صورت خودکار ساخته می‌شود.
-# فایل APK را از تب Actions → ران آخر → Artifacts دانلود کن.
+# با هر push (یا اجرای دستی) نسخه APK به‌صورت خودکار ساخته می‌شود و:
+#   ۱) در تب Actions → Artifacts گذاشته می‌شود
+#   ۲) مستقیماً روی سایت اپ آپلود می‌شود (دانلود بدون لاگین):
+#      https://mayanamin1813-cloud.github.io/sarkhat/apk/SarkhatBot.apk
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-data
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -43,3 +55,22 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: mobile/app/build/outputs/apk/**/*.apk
+
+      - name: انتشار APK روی سایت (دانلود مستقیم بدون لاگین)
+        run: |
+          if ! git ls-remote --exit-code --heads "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages >/dev/null 2>&1; then
+            echo "gh-pages هنوز ساخته نشده — بعد از اولین انتشار Pages اضافه می‌شود"
+            exit 0
+          fi
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ghp
+          mkdir -p ghp/apk
+          cp mobile/app/build/outputs/apk/debug/app-debug.apk ghp/apk/SarkhatBot.apk
+          cp mobile/app/build/outputs/apk/release/app-release.apk ghp/apk/SarkhatBot-release.apk 2>/dev/null || true
+          cd ghp
+          git config user.name "sarkhat-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "APK بدون تغییر"; exit 0; fi
+          git commit --amend -m "نسخه جدید APK — $(date -u '+%Y-%m-%d %H:%M')" >/dev/null
+          git push --force origin gh-pages
+          echo "APK روی سایت منتشر شد: /apk/SarkhatBot.apk"

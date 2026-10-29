@@ -27,3 +27,7 @@ Thumbs.db
 # محیط مجازی
 venv/
 .venv/
+
+# دیتای زنده مغز ابری — فقط روی شاخه gh-pages ساخته می‌شود، در مخزن اصلی نیست
+webapp/data/
+cloud/__pycache__/

@@ -22,13 +22,14 @@ import android.widget.Toast
  * اپلیکیشن اندروید سرخط‌زن
  * =========================
  * یک WebView خیلی سبک که اپلیکیشن ربات را نشان می‌دهد.
- * آدرس سرور پیش‌فرض: http://localhost:8000 (وقتی ربات با Termux روی همین گوشی اجرا شود)
- * از منوی سه‌نقطه بالای صفحه می‌توانی آدرس سرور را عوض کنی.
+ * آدرس پیش‌فرض: حالت ابری روی GitHub Pages — بدون نیاز به کامپیوتر یا Termux:
+ *   https://mayanamin1813-cloud.github.io/sarkhat/
+ * از منوی سه‌نقطه بالای صفحه می‌توانی آدرس را عوض کنی (مثلاً Termux محلی).
  */
 class MainActivity : Activity() {
 
     companion object {
-        const val DEFAULT_URL = "http://localhost:8000"
+        const val DEFAULT_URL = "https://mayanamin1813-cloud.github.io/sarkhat/"
     }
 
     private lateinit var web: WebView
@@ -145,15 +146,22 @@ class MainActivity : Activity() {
 
     private fun showConnectionError() {
         AlertDialog.Builder(this)
-            .setTitle("سرور پیدا نشد")
+            .setTitle("اتصال برقرار نشد")
             .setMessage(
                 "ربات سرخط‌زن روی این آدرس در دسترس نیست.\n\n" +
-                "۱) اگر ربات روی همین گوشی است، Termux را باز کن و بزن:\n" +
-                "    python main.py serve\n\n" +
-                "۲) اگر روی کامپیوتر/سرور دیگر است، آدرس را از منوی سه‌نقطه تغییر بده."
+                "۱) اینترنت گوشی را چک کن و «تلاش دوباره» بزن\n\n" +
+                "۲) اگر ربات را با Termux روی همین گوشی اجرا کرده‌ای، در Termux بزن:\n" +
+                "    python main.py serve\n" +
+                "    و بعد از منوی سه‌نقطه آدرس را بگذار: http://localhost:8000\n\n" +
+                "۳) حالت ابری (پیش‌فرض، بدون کامپیوتر):\n" +
+                "    " + DEFAULT_URL
             )
             .setPositiveButton("تلاش دوباره") { _, _ -> web.reload() }
-            .setNegativeButton("تغییر آدرس سرور") { _, _ -> askServerUrl(false) }
+            .setNegativeButton("تغییر آدرس") { _, _ -> askServerUrl(false) }
+            .setNeutralButton("حالت ابری") { _, _ ->
+                prefs.edit().putString("server_url", DEFAULT_URL).apply()
+                web.loadUrl(DEFAULT_URL)
+            }
             .setCancelable(false)
             .show()
     }

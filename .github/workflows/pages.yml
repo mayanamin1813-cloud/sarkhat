@@ -1,61 +1,43 @@
 name: انتشار وب‌اپ روی GitHub Pages
 
-# اپلیکیشن PWA را روی GitHub Pages منتشر می‌کند تا بدون نصب هم در مرورگر باز شود:
-#   https://<نام-کاربری>.github.io/<نام-مخزن>/
+# اپلیکیشن (پوشه webapp) را روی شاخه gh-pages منتشر می‌کند تا سایت اپ همیشه
+# در این آدرس باز شود:
+#   https://mayanamin1813-cloud.github.io/sarkhat/
 #
-# نکته: اگر Pages هنوز از تنظیمات مخزن فعال نشده باشد، این workflow بدون خطا
-# رد می‌شود (سبز). بعد از فعال‌کردن (Settings → Pages → Source: GitHub Actions)
-# هر push بعدی اپ را منتشر می‌کند.
+# نکته‌ها:
+#  • keep_files → پوشه data/ (دیتای زنده مغز ابری) و apk/ (نسخه اندروید)
+#    پاک نمی‌شوند و بین انتشارها حفظ می‌شوند.
+#  • برخلاف حالت قدیمی، این نسخه حتی اگر Pages هنوز فعال نشده باشد
+#    شاخه gh-pages را می‌سازد؛ فعال‌سازی Pages فقط یک‌بار لازم است.
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
+    paths:
+      - "webapp/**"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: gh-pages-data
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    # روی مخازن خصوصی (پلن رایگان) Pages در دسترس نیست — بدون خطا رد می‌شود
-    if: github.event.repository.private == false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: دریافت کد
+        uses: actions/checkout@v4
 
-      - name: بررسی فعال‌بودن Pages
-        id: check
-        run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ github.token }}" \
-            https://api.github.com/repos/${{ github.repository }}/pages)
-          echo "pages api http=$code"
-          if [ "$code" = "200" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "⚠️ Pages هنوز فعال نشده است — Settings → Pages → Source: GitHub Actions"
-          fi
-
-      - name: آماده‌سازی Pages
-        if: steps.check.outputs.enabled == 'true'
-        uses: actions/configure-pages@v5
-
-      - name: آپلود فایل‌های webapp
-        if: steps.check.outputs.enabled == 'true'
-        uses: actions/upload-pages-artifact@v3
+      - name: انتشار webapp در شاخه gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: webapp
-
-      - name: انتشار
-        if: steps.check.outputs.enabled == 'true'
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./webapp
+          keep_files: true
+          user_name: sarkhat-bot
+          user_email: actions@users.noreply.github.com
+          commit_message: "انتشار وب‌اپ — ${{ github.event.head_commit.message }}"
