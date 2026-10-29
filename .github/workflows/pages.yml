@@ -1,14 +1,14 @@
 name: انتشار وب‌اپ روی GitHub Pages
 
-# اپلیکیشن (پوشه webapp) را روی شاخه gh-pages منتشر می‌کند تا سایت اپ همیشه
-# در این آدرس باز شود:
+# اپلیکیشن (پوشه webapp) را روی GitHub Pages منتشر می‌کند:
 #   https://mayanamin1813-cloud.github.io/sarkhat/
 #
 # نکته‌ها:
-#  • keep_files → پوشه data/ (دیتای زنده مغز ابری) و apk/ (نسخه اندروید)
-#    پاک نمی‌شوند و بین انتشارها حفظ می‌شوند.
-#  • برخلاف حالت قدیمی، این نسخه حتی اگر Pages هنوز فعال نشده باشد
-#    شاخه gh-pages را می‌سازد؛ فعال‌سازی Pages فقط یک‌بار لازم است.
+#  • Pages بار اول به‌صورت خودکار فعال می‌شود (enablement: true)
+#  • دیتای زنده (data/live.json) و APK از شاخه ذخیره‌سازی gh-pages برمی‌داریم
+#    تا بین انتشارها گم نشوند
+#  • مغز ابری (brain.yml) هم همین خروجی را منتشر می‌کند — با گروه همزمانی
+#    مشترک، دو انتشار با هم تداخل نمی‌کنند
 
 on:
   push:
@@ -19,8 +19,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  administration: write    # فقط برای فعال‌سازی خودکار Pages بار اول
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: gh-pages-data
@@ -29,35 +30,36 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: دریافت کد
         uses: actions/checkout@v4
 
-      - name: فعال‌سازی Pages (فقط بار اول — خودکار)
+      - name: بازیابی دیتای زنده و APK از شاخه ذخیره‌سازی gh-pages
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ github.token }}" \
-            https://api.github.com/repos/${{ github.repository }}/pages)
-          echo "وضعیت فعلی Pages: http=$code"
-          if [ "$code" = "200" ]; then
-            echo "Pages قبلاً فعال است ✓"
+          mkdir -p webapp/data webapp/apk
+          if git clone --depth 1 --branch gh-pages \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ghp 2>/dev/null; then
+            cp -f ghp/data/live.json webapp/data/ 2>/dev/null || true
+            cp -f ghp/data/brain_state.json webapp/data/ 2>/dev/null || true
+            cp -f ghp/apk/*.apk webapp/apk/ 2>/dev/null || true
+            echo "دیتای قبلی بازیابی شد: $(ls webapp/data 2>/dev/null) | apk: $(ls webapp/apk 2>/dev/null)"
           else
-            http=$(curl -s -o /tmp/pages-resp.json -w "%{http_code}" -X POST \
-              -H "Authorization: Bearer ${{ github.token }}" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository }}/pages" \
-              -d '{"source":{"branch":"gh-pages","path":"/"}}')
-            echo "فعال‌سازی Pages: http=$http"
-            cat /tmp/pages-resp.json | head -3 || true
-            [ "$http" = "201" ] || [ "$http" = "200" ] || [ "$http" = "409" ] && echo "Pages فعال شد ✓" || echo "⚠️ فعال‌سازی خودکار نشد — Settings → Pages → Branch: gh-pages"
+            echo "شاخه gh-pages هنوز نیست — بدون دیتا منتشر می‌شود (مغز ابری پرش می‌کند)"
           fi
 
-      - name: انتشار webapp در شاخه gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: آماده‌سازی و فعال‌سازی خودکار Pages
+        uses: actions/configure-pages@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./webapp
-          keep_files: true
-          user_name: sarkhat-bot
-          user_email: actions@users.noreply.github.com
-          commit_message: "انتشار وب‌اپ — ${{ github.event.head_commit.message }}"
+          enablement: true
+
+      - name: آپلود فایل‌های سایت
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: webapp
+
+      - name: انتشار
+        id: deployment
+        uses: actions/deploy-pages@v4

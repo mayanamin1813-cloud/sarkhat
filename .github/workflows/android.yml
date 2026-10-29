@@ -14,6 +14,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: gh-pages-data
@@ -22,6 +24,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: دریافت کد
         uses: actions/checkout@v4
@@ -58,19 +63,41 @@ jobs:
 
       - name: انتشار APK روی سایت (دانلود مستقیم بدون لاگین)
         run: |
-          if ! git ls-remote --exit-code --heads "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages >/dev/null 2>&1; then
-            echo "gh-pages هنوز ساخته نشده — بعد از اولین انتشار Pages اضافه می‌شود"
-            exit 0
+          mkdir -p webapp/data webapp/apk
+          if git clone --depth 1 --branch gh-pages \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ghp 2>/dev/null; then
+            cp -f ghp/data/live.json webapp/data/ 2>/dev/null || true
+            cp -f ghp/data/brain_state.json webapp/data/ 2>/dev/null || true
+            echo "دیتای زنده بازیابی شد"
           fi
-          git clone --depth 1 --branch gh-pages "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ghp
-          mkdir -p ghp/apk
-          cp mobile/app/build/outputs/apk/debug/app-debug.apk ghp/apk/SarkhatBot.apk
-          cp mobile/app/build/outputs/apk/release/app-release.apk ghp/apk/SarkhatBot-release.apk 2>/dev/null || true
-          cd ghp
-          git config user.name "sarkhat-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then echo "APK بدون تغییر"; exit 0; fi
-          git commit --amend -m "نسخه جدید APK — $(date -u '+%Y-%m-%d %H:%M')" >/dev/null
-          git push --force origin gh-pages
-          echo "APK روی سایت منتشر شد: /apk/SarkhatBot.apk"
+          cp mobile/app/build/outputs/apk/debug/app-debug.apk webapp/apk/SarkhatBot.apk
+          cp mobile/app/build/outputs/apk/release/app-release.apk webapp/apk/SarkhatBot-release.apk 2>/dev/null || true
+          # APK جدید را در شاخه حافظه هم نگه می‌داریم تا انتشارهای بعدی از دست نرود
+          if [ -d ghp ]; then
+            mkdir -p ghp/apk
+            cp -f webapp/apk/*.apk ghp/apk/
+            cd ghp
+            git config user.name "sarkhat-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add -A
+            git commit --amend -m "نسخه جدید APK — $(date -u '+%Y-%m-%d %H:%M')" >/dev/null
+            git push --force origin gh-pages
+            cd "${GITHUB_WORKSPACE}"
+          else
+            echo "شاخه حافظه هنوز نیست — مغز ابری بعدی APK را نگه می‌دارد"
+          fi
+          echo "APK آماده انتشار روی سایت شد: /apk/SarkhatBot.apk"
+
+      - name: آماده‌سازی و فعال‌سازی خودکار Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: آپلود فایل‌های سایت (شامل APK)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: webapp
+
+      - name: انتشار
+        id: deployment
+        uses: actions/deploy-pages@v4
