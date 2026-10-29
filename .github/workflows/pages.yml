@@ -1,0 +1,41 @@
+name: انتشار وب‌اپ روی GitHub Pages
+
+# اپلیکیشن PWA را روی GitHub Pages منتشر می‌کند تا بدون نصب هم در مرورگر باز شود:
+#   https://<نام-کاربری>.github.io/<نام-مخزن>/
+# بعد از باز شدن، در تب تنظیمات اپ، آدرس سرور (Termux/کامپیوتر) را بده.
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  administration: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # روی مخازن خصوصی (پلن رایگان) Pages در دسترس نیست — بدون خطا رد می‌شود
+    if: github.event.repository.private == false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: آماده‌سازی Pages (فعال‌سازی خودکار)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: آپلود فایل‌های webapp
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: webapp
+      - name: انتشار
+        id: deployment
+        uses: actions/deploy-pages@v4

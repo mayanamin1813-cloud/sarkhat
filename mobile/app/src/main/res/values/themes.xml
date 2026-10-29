@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="SarkhatTheme" parent="android:Theme.Material">
+        <item name="android:colorPrimary">@color/primary</item>
+        <item name="android:colorPrimaryDark">@color/primaryDark</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:statusBarColor">@color/primaryDark</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:actionBarStyle">@style/SarkhatActionBar</item>
+    </style>
+
+    <style name="SarkhatActionBar" parent="android:Widget.Material.ActionBar">
+        <item name="android:background">@color/primary</item>
+        <item name="android:titleTextStyle">@style/SarkhatActionBarTitle</item>
+    </style>
+
+    <style name="SarkhatActionBarTitle" parent="android:TextAppearance.Material.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/text</item>
+    </style>
+</resources>

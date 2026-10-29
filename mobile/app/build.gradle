@@ -1,0 +1,39 @@
+// اپلیکیشن اندروید سرخط‌زن — WebView سبک (APK حدود ۲ مگابایت)
+// بدون کتابخانه سنگین تا روی گوشی‌های ضعیف هم روان باشد.
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'ir.sarkhatbot'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "ir.sarkhatbot"
+        minSdk 21            // اندروید ۵ به بالا — تقریباً همه گوشی‌های ارزان
+        targetSdk 34
+        versionCode 2
+        versionName "2.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // با کلید debug امضا می‌شود تا فایل APK مستقیماً قابل نصب باشد
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
+}

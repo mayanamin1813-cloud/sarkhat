@@ -1,0 +1,16 @@
+// پروژه اندروید ربات سرخط‌زن — سبک و کم‌حجم
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "SarkhatBot"
+include ':app'

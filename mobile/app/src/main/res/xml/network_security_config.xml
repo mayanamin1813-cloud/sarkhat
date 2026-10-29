@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  اجازه اتصال HTTP (نه فقط HTTPS) — برای سرور محلی Termux روی همین گوشی
+  و سرور روی شبکه خانگی مثل http://192.168.1.5:8000
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

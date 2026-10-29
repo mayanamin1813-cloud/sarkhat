@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="description" content="ربات سرخط‌زن — سیگنال شکست با درجه اعتبارسنجی برای بورس تهران و کریپتو">
+<title>سرخط‌زن — سیگنال معتبر</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">⚡</div>
+    <div>
+      <h1>سرخط‌زن</h1>
+      <div class="sub" id="connStatus">در حال اتصال…</div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span class="clock" id="tehranClock">--:--</span>
+    <button id="installBtn" class="btn-install hidden" type="button">نصب اپ</button>
+  </div>
+</header>
+
+<div id="demoBanner" class="banner hidden">
+  ⚠️ <b>حالت نمایشی</b> — سرورهای بورس/نوبیتکس از این شبکه در دسترس نیستند.
+  داخل ایران دیتای واقعی خودکار وصل می‌شود.
+</div>
+
+<main id="main">
+
+  <!-- ================= تب سیگنال‌ها ================= -->
+  <section id="tab-signals" class="tab active">
+    <div class="filters">
+      <button class="chip active" data-mkt="all" type="button">همه</button>
+      <button class="chip" data-mkt="crypto" type="button">کریپتو</button>
+      <button class="chip" data-mkt="tse" type="button">بورس</button>
+      <button class="chip" data-mkt="valid" type="button">فقط معتبر</button>
+      <button id="scanNow" class="chip chip-action" type="button">⟳ اسکن فوری</button>
+    </div>
+    <div id="signalsList" class="list">
+      <div class="empty">در حال دریافت سیگنال‌ها…</div>
+    </div>
+  </section>
+
+  <!-- ================= تب بازار ================= -->
+  <section id="tab-market" class="tab">
+    <h2 class="sec-title">کریپتو (نوبیتکس)</h2>
+    <div id="marketCrypto" class="list"></div>
+    <h2 class="sec-title">بورس تهران <span id="tseOpenBadge" class="badge badge-gray">—</span></h2>
+    <div id="marketTse" class="list"></div>
+  </section>
+
+  <!-- ================= تب معاملات شبیه‌سازی ================= -->
+  <section id="tab-trades" class="tab">
+    <div id="riskStrip" class="risk-strip"></div>
+    <h2 class="sec-title">معاملات شبیه‌سازی‌شده (بدون پول واقعی)</h2>
+    <div id="tradesList" class="list"></div>
+  </section>
+
+  <!-- ================= تب تنظیمات ================= -->
+  <section id="tab-settings" class="tab">
+    <div class="card">
+      <h3>آدرس سرور ربات</h3>
+      <p class="hint">اگر سرور روی همین گوشی با Termux اجرا شده، همین پیش‌فرض بماند.
+      اگر روی کامپیوتر/سرور دیگر است، آدرس آن را بگذار (مثال: <code>http://192.168.1.5:8000</code>)</p>
+      <div class="row">
+        <input id="serverUrl" type="url" placeholder="http://localhost:8000" dir="ltr">
+        <button id="saveUrl" class="btn btn-primary" type="button">ذخیره</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>حداقل درجه سیگنال</h3>
+      <p class="hint">فقط سیگنال‌های با این درجه یا بالاتر وارد معامله شبیه‌سازی می‌شوند.</p>
+      <div class="row" id="gradePicker">
+        <button class="chip" data-grade="A" type="button">A — فقط بهترین (۸۰+)</button>
+        <button class="chip" data-grade="B" type="button">B — متعادل (۶۵+)</button>
+        <button class="chip" data-grade="C" type="button">C — پرسیگنال (۵۰+)</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>رفتار ربات</h3>
+      <label class="switch-row">
+        <span>معامله شبیه‌سازی خودکار (پیپرتریدینگ)</span>
+        <input id="autoPaper" type="checkbox">
+      </label>
+      <label class="switch-row">
+        <span>حالت کم‌مصرف (اینترنت کمتر، باتری کمتر)</span>
+        <input id="lowData" type="checkbox">
+      </label>
+      <div class="row">
+        <label for="scanInterval">فاصله اسکن (ثانیه)</label>
+        <input id="scanInterval" type="number" min="60" max="900" step="30" dir="ltr">
+      </div>
+      <button id="saveSettings" class="btn btn-primary wide" type="button">ذخیره تنظیمات</button>
+    </div>
+    <div class="card">
+      <h3>راهنمای سریع</h3>
+      <p class="hint">
+        ۱) این اپ فقط «سیگنال» می‌دهد و سفارش واقعی ثبت نمی‌کند.<br>
+        ۲) سیگنال‌های <b class="g-A">درجه A</b> یعنی همه فیلترهای اعتبارسنجی قوی پاس شده‌اند.<br>
+        ۳) چک‌لیست هر سیگنال را باز کن و خودت هم تأیید کن.<br>
+        ۴) هرگز بیش از ۱٪ سرمایه در یک معامله ریسک نکن — ربات هم همین‌طور برنامه‌ریزی شده.
+      </p>
+    </div>
+  </section>
+</main>
+
+<!-- ================= نوار پایین ================= -->
+<nav class="tabbar">
+  <button class="tabbtn active" data-tab="signals" type="button"><span>🎯</span>سیگنال‌ها</button>
+  <button class="tabbtn" data-tab="market" type="button"><span>📈</span>بازار</button>
+  <button class="tabbtn" data-tab="trades" type="button"><span>📒</span>معاملات</button>
+  <button class="tabbtn" data-tab="settings" type="button"><span>⚙️</span>تنظیمات</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

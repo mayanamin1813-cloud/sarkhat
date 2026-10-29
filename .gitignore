@@ -1,0 +1,29 @@
+# پایتون
+__pycache__/
+*.pyc
+*.pyo
+
+# خروجی‌های ربات (لاگ معاملات و وضعیت)
+output/
+data/
+*.csv
+*.log
+
+# اندروید
+mobile/.gradle/
+mobile/build/
+mobile/app/build/
+mobile/local.properties
+*.apk
+*.keystore
+!debug.keystore
+
+# سیستم
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# محیط مجازی
+venv/
+.venv/

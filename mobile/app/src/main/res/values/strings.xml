@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">سرخط‌زن</string>
+    <string name="server_dialog_title">آدرس سرور ربات</string>
+    <string name="server_dialog_hint">روی همین گوشی (Termux): http://localhost:8000\nروی کامپیوتر در شبکه خانگی: http://192.168.1.5:8000</string>
+    <string name="server_dialog_ok">اتصال</string>
+    <string name="server_dialog_cancel">بستن</string>
+    <string name="menu_change_server">تغییر آدرس سرور</string>
+    <string name="menu_reload">بارگذاری دوباره</string>
+</resources>

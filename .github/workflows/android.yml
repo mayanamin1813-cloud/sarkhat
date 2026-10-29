@@ -1,0 +1,45 @@
+name: ساخت APK اندروید
+
+# با هر push (یا اجرای دستی) نسخه APK به‌صورت خودکار ساخته می‌شود.
+# فایل APK را از تب Actions → ران آخر → Artifacts دانلود کن.
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: نصب جاوا ۱۷
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: نصب گریدل
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: ساخت نسخه Debug (قابل نصب)
+        run: gradle -p mobile assembleDebug --no-daemon
+
+      - name: ساخت نسخه Release (امضا شده با کلید تست)
+        run: gradle -p mobile assembleRelease --no-daemon
+
+      - name: آپلود فایل‌های APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SarkhatBot-APK
+          path: mobile/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+      - name: پیوست APK به Release (فقط برای تگ‌ها)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/app/build/outputs/apk/**/*.apk

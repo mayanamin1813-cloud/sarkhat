@@ -1,0 +1,10 @@
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.8
+requests>=2.31
+arabic-reshaper>=3.0
+python-bidi>=0.4
+
+# کتابخانه اختیاری برای دیتای بورس تهران (روی سرور داخل ایران نصب کن)
+# pip install pytse-client
+pytse-client>=0.10
